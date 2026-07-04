@@ -26,7 +26,8 @@
 
 RSITimer::RSITimer(QObject *parent)
     : QObject(parent)
-    , m_idleTimeInstance(new RSIIdleTimeImpl())
+    // , m_idleTimeInstance(new RSIIdleTimeImpl())
+    , m_idleTimeInstance(new RSIIdleTime())
     , m_intervals(RSIGlobals::instance()->intervals())
     , m_state(TimerState::Monitoring)
 {
@@ -51,7 +52,9 @@ void RSITimer::createTimers()
     int bigThreshold = m_useIdleTimers ? m_intervals[BIG_BREAK_THRESHOLD] : INT_MAX;
     int tinyThreshold = m_useIdleTimers ? m_intervals[TINY_BREAK_THRESHOLD] : INT_MAX;
 
-    m_bigBreakCounter = std::unique_ptr<RSITimerCounter>{new RSITimerCounter(m_intervals[BIG_BREAK_INTERVAL], m_intervals[BIG_BREAK_DURATION], bigThreshold)};
+    m_bigBreakCounter = !m_intervals[BIG_BREAK_INTERVAL]
+        ? nullptr
+        : std::unique_ptr<RSITimerCounter>{new RSITimerCounter(m_intervals[BIG_BREAK_INTERVAL], m_intervals[BIG_BREAK_DURATION], bigThreshold)};
     m_tinyBreakCounter = !m_intervals[TINY_BREAK_INTERVAL]
         ? nullptr
         : std::unique_ptr<RSITimerCounter>{new RSITimerCounter(m_intervals[TINY_BREAK_INTERVAL], m_intervals[TINY_BREAK_DURATION], tinyThreshold)};
@@ -85,7 +88,9 @@ void RSITimer::hibernationDetector(const int totalIdle)
         qDebug() << "Not been checking idleTime for more than 60 seconds, "
                  << "assuming the computer hibernated, resetting timers"
                  << "Last: " << last << "Current: " << current << "Idle, s: " << totalIdle;
-        m_bigBreakCounter->reset();
+        if (m_bigBreakCounter) {
+            m_bigBreakCounter->reset();
+        }
         if (m_tinyBreakCounter) {
             m_tinyBreakCounter->reset();
         }
@@ -96,7 +101,7 @@ void RSITimer::hibernationDetector(const int totalIdle)
 
 int RSITimer::idleTime()
 {
-    int totalIdle = m_idleTimeInstance->getIdleTime() / 1000;
+    int totalIdle = static_cast<int>(std::round(static_cast<double>(m_idleTimeInstance->getIdleTime()) / 1000.0));
     hibernationDetector(totalIdle);
     return totalIdle;
 }
@@ -126,9 +131,9 @@ void RSITimer::resetAfterBreak()
     emit updateIdleAvg(0.0);
     emit relax(-1, false);
     emit minimize();
-    if (m_bigBreakCounter->isReset()) {
+    if (m_bigBreakCounter && m_bigBreakCounter->isReset()) {
         emit endLongBreak();
-    } else {
+    } else if (m_tinyBreakCounter && m_tinyBreakCounter->isReset()) {
         emit endShortBreak();
     }
 }
@@ -159,10 +164,10 @@ void RSITimer::slotLock()
 
 void RSITimer::skipBreak()
 {
-    if (m_bigBreakCounter->isReset()) {
+    if (m_bigBreakCounter && m_bigBreakCounter->isReset()) {
         RSIGlobals::instance()->stats()->increaseStat(BIG_BREAKS_SKIPPED);
         emit bigBreakSkipped();
-    } else {
+    } else if (m_tinyBreakCounter && m_tinyBreakCounter->isReset()) {
         RSIGlobals::instance()->stats()->increaseStat(TINY_BREAKS_SKIPPED);
         emit tinyBreakSkipped();
     }
@@ -171,10 +176,10 @@ void RSITimer::skipBreak()
 
 void RSITimer::postponeBreak()
 {
-    if (m_bigBreakCounter->isReset()) {
+    if (m_bigBreakCounter && m_bigBreakCounter->isReset()) {
         m_bigBreakCounter->postpone(m_intervals[POSTPONE_BREAK_INTERVAL]);
         RSIGlobals::instance()->stats()->increaseStat(BIG_BREAKS_POSTPONED);
-    } else {
+    } else if (m_tinyBreakCounter && m_tinyBreakCounter->isReset()) {
         m_tinyBreakCounter->postpone(m_intervals[POSTPONE_BREAK_INTERVAL]);
         RSIGlobals::instance()->stats()->increaseStat(TINY_BREAKS_POSTPONED);
     }
@@ -225,10 +230,13 @@ void RSITimer::timeout()
     case TimerState::Monitoring: {
         // This is a weird thing to track as now when user was away, they will get back to zero counters,
         // not to an arbitrary time elapsed since last "idleness-skip-break".
-        bool bigWasReset = m_bigBreakCounter->isReset();
+        bool bigWasReset = !m_bigBreakCounter || m_bigBreakCounter->isReset();
         bool tinyWasReset = !m_tinyBreakCounter || m_tinyBreakCounter->isReset();
 
-        int breakTime = m_bigBreakCounter->tick(idleSeconds);
+        int breakTime = 0;
+        if (m_bigBreakCounter) {
+            breakTime = std::max(breakTime, m_bigBreakCounter->tick(idleSeconds));
+        }
         if (m_tinyBreakCounter) {
             breakTime = std::max(breakTime, m_tinyBreakCounter->tick(idleSeconds));
         }
@@ -236,7 +244,7 @@ void RSITimer::timeout()
             suggestBreak(breakTime);
         } else {
             // Not a time for break yet, but if one of the counters got reset, that means we were idle enough to skip.
-            if (!bigWasReset && m_bigBreakCounter->isReset()) {
+            if (!bigWasReset && m_bigBreakCounter && m_bigBreakCounter->isReset()) {
                 RSIGlobals::instance()->stats()->increaseStat(BIG_BREAKS);
                 RSIGlobals::instance()->stats()->increaseStat(IDLENESS_CAUSED_SKIP_BIG);
             }
@@ -245,8 +253,14 @@ void RSITimer::timeout()
                 RSIGlobals::instance()->stats()->increaseStat(IDLENESS_CAUSED_SKIP_TINY);
             }
         }
-        const double rawvalue = m_tinyBreakCounter ? m_tinyBreakCounter->counterLeft() / (double)m_intervals[TINY_BREAK_INTERVAL]
-                                                   : m_bigBreakCounter->counterLeft() / (double)m_intervals[BIG_BREAK_INTERVAL];
+        double rawvalue = 1.0;
+        if (m_tinyBreakCounter) {
+            rawvalue = m_tinyBreakCounter->counterLeft() / (double)m_intervals[TINY_BREAK_INTERVAL];
+        } else if (m_bigBreakCounter) {
+            rawvalue = m_bigBreakCounter->counterLeft() / (double)m_intervals[BIG_BREAK_INTERVAL];
+        }
+        // const double rawvalue = m_tinyBreakCounter ? m_tinyBreakCounter->counterLeft() / (double)m_intervals[TINY_BREAK_INTERVAL]
+        //    : m_bigBreakCounter->counterLeft() / (double)m_intervals[BIG_BREAK_INTERVAL];
         const double value = 100.0 - (rawvalue * 100.0);
         emit updateIdleAvg(value);
         break;
@@ -297,15 +311,22 @@ void RSITimer::suggestBreak(const int breakTime)
         return;
     }
 
-    if (m_bigBreakCounter->isReset()) {
+    if (m_bigBreakCounter && m_bigBreakCounter->isReset()) {
         RSIGlobals::instance()->stats()->increaseStat(BIG_BREAKS);
         RSIGlobals::instance()->stats()->setStat(LAST_BIG_BREAK, QVariant(QDateTime::currentDateTime()));
-    } else {
+    } else if (m_tinyBreakCounter && m_tinyBreakCounter->isReset()) {
         RSIGlobals::instance()->stats()->increaseStat(TINY_BREAKS);
         RSIGlobals::instance()->stats()->setStat(LAST_TINY_BREAK, QVariant(QDateTime::currentDateTime()));
     }
 
-    bool nextOneIsBig = !m_tinyBreakCounter || m_bigBreakCounter->counterLeft() <= m_tinyBreakCounter->getDelayTicks();
+    bool nextOneIsBig;
+    if (!m_tinyBreakCounter) {
+        nextOneIsBig = true;
+    } else if (!m_bigBreakCounter) {
+        nextOneIsBig = false;
+    } else {
+        nextOneIsBig = m_bigBreakCounter->counterLeft() <= m_tinyBreakCounter->getDelayTicks();
+    }
     if (!m_usePopup) {
         doBreakNow(breakTime, nextOneIsBig);
         return;
@@ -328,5 +349,5 @@ void RSITimer::suggestBreak(const int breakTime)
 
 void RSITimer::defaultUpdateToolTip()
 {
-    emit updateToolTip(m_tinyBreakCounter ? m_tinyBreakCounter->counterLeft() : 0, m_bigBreakCounter->counterLeft());
+    emit updateToolTip(m_tinyBreakCounter ? m_tinyBreakCounter->counterLeft() : 0, m_bigBreakCounter ? m_bigBreakCounter->counterLeft() : 0);
 }

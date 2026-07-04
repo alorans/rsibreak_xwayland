@@ -63,7 +63,8 @@ void RSIGlobals::slotReadConfig()
     m_intervals[TINY_BREAK_INTERVAL] = config.readEntry("TinyEnabled", true) ? config.readEntry("TinyInterval", 10) * mult : 0;
     m_intervals[TINY_BREAK_DURATION] = config.readEntry("TinyDuration", 20);
     m_intervals[TINY_BREAK_THRESHOLD] = config.readEntry("TinyThreshold", 20);
-    m_intervals[BIG_BREAK_INTERVAL] = config.readEntry("BigInterval", 60) * mult;
+    // m_intervals[BIG_BREAK_INTERVAL] = config.readEntry("BigInterval", 60) * mult;
+    m_intervals[BIG_BREAK_INTERVAL] = config.readEntry("BigEnabled", true) ? config.readEntry("BigInterval", 60) * mult : 0;
     m_intervals[BIG_BREAK_DURATION] = config.readEntry("BigDuration", 1) * mult;
     m_intervals[BIG_BREAK_THRESHOLD] = config.readEntry("BigThreshold", 1) * mult;
     m_intervals[POSTPONE_BREAK_INTERVAL] = config.readEntry("PostponeBreakDuration", 5) * mult;

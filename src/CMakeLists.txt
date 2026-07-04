@@ -39,10 +39,20 @@ rsiwidget.h RSIObject
 add_library(rsibreak_lib STATIC ${rsibreak_sources})
 add_executable(rsibreak main.cpp)
 
+pkg_check_modules(WAYLAND_CLIENT REQUIRED IMPORTED_TARGET wayland-client)
+pkg_get_variable(WAYLAND_PROTOCOLS_DIR wayland-protocols pkgdatadir)
+
+ecm_add_wayland_client_protocol(rsibreak_lib
+    PROTOCOL "${WAYLAND_PROTOCOLS_DIR}/staging/ext-idle-notify/ext-idle-notify-v1.xml"
+    BASENAME ext-idle-notify-v1
+)
+target_include_directories(rsibreak_lib PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
 # linking
 target_link_libraries(rsibreak_lib
-    KF6::CoreAddons
+    Wayland::Client
     KF6::ConfigCore
+    KF6::CoreAddons
     KF6::Crash
     KF6::DBusAddons
     KF6::I18n

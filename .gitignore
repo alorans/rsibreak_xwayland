@@ -1,4 +1,5 @@
 .cache/
 .clang-format
-
+.direnv
+build
 compile_commands.json

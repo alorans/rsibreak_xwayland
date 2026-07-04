@@ -28,6 +28,7 @@ public:
     KPluralHandlingSpinBox *tinyInterval;
     KPluralHandlingSpinBox *tinyDuration;
     KPluralHandlingSpinBox *tinyThreshold;
+    QGroupBox *bigBox;
     KPluralHandlingSpinBox *bigInterval;
     KPluralHandlingSpinBox *bigDuration;
     KPluralHandlingSpinBox *bigThreshold;
@@ -102,8 +103,9 @@ SetupTiming::SetupTiming(QWidget *parent)
 
     // ------------------------ Bigbox
 
-    QGroupBox *bigBox = new QGroupBox(this);
-    bigBox->setTitle(i18n("Big Breaks"));
+    d->bigBox = new QGroupBox(this);
+    d->bigBox->setTitle(i18n("Big Breaks"));
+    d->bigBox->setCheckable(true);
 
     QWidget *m3 = new QWidget(this);
     QHBoxLayout *m3HBoxLayout = new QHBoxLayout(m3);
@@ -145,12 +147,12 @@ SetupTiming::SetupTiming(QWidget *parent)
     d->bigThreshold->setRange(1, 1000);
     lBigThreshold->setBuddy(d->bigThreshold);
 
-    QVBoxLayout *vbox1 = new QVBoxLayout(bigBox);
+    QVBoxLayout *vbox1 = new QVBoxLayout(d->bigBox);
     vbox1->addWidget(m3);
     vbox1->addWidget(m4);
     vbox1->addWidget(mBigThreshold);
     vbox1->addStretch(1);
-    bigBox->setLayout(vbox1);
+    d->bigBox->setLayout(vbox1);
 
     // ------------------------ Postpone break
 
@@ -175,7 +177,7 @@ SetupTiming::SetupTiming(QWidget *parent)
     postponeBox->setLayout(vbox2);
 
     l->addWidget(d->tinyBox);
-    l->addWidget(bigBox);
+    l->addWidget(d->bigBox);
     l->addWidget(postponeBox);
     setLayout(l);
     readSettings();
@@ -216,6 +218,7 @@ void SetupTiming::applySettings()
     config.writeEntry("TinyInterval", d->tinyInterval->value());
     config.writeEntry("TinyDuration", d->tinyDuration->value());
     config.writeEntry("TinyThreshold", d->tinyThreshold->value());
+    config.writeEntry("BigEnabled", d->bigBox->isChecked());
     config.writeEntry("BigInterval", d->bigInterval->value());
     config.writeEntry("BigDuration", d->bigDuration->value());
     config.writeEntry("BigThreshold", d->bigThreshold->value());
@@ -232,6 +235,7 @@ void SetupTiming::readSettings()
     d->tinyInterval->setValue(config.readEntry("TinyInterval", 10));
     d->tinyDuration->setValue(config.readEntry("TinyDuration", 20));
     d->tinyThreshold->setValue(config.readEntry("TinyThreshold", 40));
+    d->bigBox->setChecked(config.readEntry("BigEnabled", true));
     d->bigInterval->setValue(config.readEntry("BigInterval", 60));
     d->bigDuration->setValue(config.readEntry("BigDuration", 1));
     d->bigThreshold->setValue(config.readEntry("BigThreshold", 5));

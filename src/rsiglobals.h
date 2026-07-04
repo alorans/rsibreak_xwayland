@@ -112,6 +112,14 @@ public:
     }
 
     /**
+     * Returns true if big breaks are to be made at all.
+     */
+    bool useBigBreaks() const
+    {
+        return m_intervals[BIG_BREAK_INTERVAL] != 0;
+    }
+
+    /**
      * This function returns a color ranging from green to red.
      * The more red, the more the user needs a tiny break.
      */

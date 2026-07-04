@@ -10,6 +10,7 @@
 #ifndef RSITimer_H
 #define RSITimer_H
 
+#include <QObject>
 #include <QVector>
 #include <memory>
 
@@ -48,7 +49,7 @@ public:
 
     int bigLeft() const
     {
-        return m_bigBreakCounter->counterLeft();
+        return m_bigBreakCounter ? m_bigBreakCounter->counterLeft() : 0;
     };
 
 public slots:
