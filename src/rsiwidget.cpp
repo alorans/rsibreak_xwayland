@@ -108,6 +108,7 @@ void RSIObject::slotLock()
 void RSIObject::setCounters(int timeleft)
 {
     if (timeleft > 0) {
+        // this is where the text of the widget that counts down the remaining break time during a break is set
         m_effect->setLabel(KFormat().formatSpelloutDuration(timeleft * 1000));
     } else if (m_timer->isSuspended()) {
         m_effect->setLabel(i18n("Suspended"));

@@ -6,6 +6,7 @@
 
 // Local includes.
 #include "setupmaximized.h"
+#include "breakcontrol.h"
 #include "rsiwidget.h" // effects enum
 
 // QT includes.
@@ -333,6 +334,8 @@ void SetupMaximized::applySettings()
     config.writeEntry("HideMinimizeButton", d->hideMinimizeButton->isChecked());
     config.writeEntry("HideLockButton", d->hideLockButton->isChecked());
     config.writeEntry("HidePostponeButton", d->hidePostponeButton->isChecked());
+    BreakControl::updateButtonState(d->hideMinimizeButton->isChecked(), d->hideLockButton->isChecked(), d->hidePostponeButton->isChecked());
+
     config.writeEntry("SearchRecursiveCheck", d->searchRecursiveCheck->isChecked());
     config.writeEntry("ShowSmallImagesCheck", d->showSmallImagesCheck->isChecked());
     config.writeEntry("ExpandImageToFullScreen", d->expandImageToFullScreen->isChecked());
@@ -360,6 +363,7 @@ void SetupMaximized::readSettings()
     d->hideMinimizeButton->setChecked(config.readEntry("HideMinimizeButton", false));
     d->hideLockButton->setChecked(config.readEntry("HideLockButton", false));
     d->hidePostponeButton->setChecked(config.readEntry("HidePostponeButton", false));
+    BreakControl::updateButtonState(d->hideMinimizeButton->isChecked(), d->hideLockButton->isChecked(), d->hidePostponeButton->isChecked());
 
     const int effect = d->effectBox->findData(QVariant(config.readEntry("Effect", 0)));
     d->effectBox->setCurrentIndex(effect);

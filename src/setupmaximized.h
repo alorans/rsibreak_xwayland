@@ -7,6 +7,7 @@
 #ifndef SETUPMAXIMIZED_H
 #define SETUPMAXIMIZED_H
 
+#include "breakcontrol.h"
 #include <qwidget.h>
 
 class SetupMaximizedPriv;
@@ -50,6 +51,7 @@ private slots:
     void slotHideFlash();
 
 private:
+    void hideSkipButtonChanged(bool);
     void readSettings();
     SetupMaximizedPriv *d;
 };

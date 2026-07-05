@@ -12,7 +12,6 @@
     in
     {
       devShells.${system}.default = pkgs.mkShell {
-        # build-time dependencies
         nativeBuildInputs = with pkgs; [
           cmake
           pkg-config
@@ -23,9 +22,10 @@
           wayland
         ];
 
-        buildInputs = with pkgs.kdePackages; [
+        buildInputs = with pkgs; [
           wayland
           qtbase
+        ] ++ (with pkgs.kdePackages; [
           kcoreaddons
           kconfig
           kcrash
@@ -40,7 +40,7 @@
           kwindowsystem
           kstatusnotifieritem
           kcolorscheme
-        ];
+        ]);
 
         shellHook = ''
           export CMAKE_EXPORT_COMPILE_COMMANDS=ON

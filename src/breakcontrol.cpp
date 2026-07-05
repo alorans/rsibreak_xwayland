@@ -19,10 +19,22 @@
 
 #include <KLocalizedString>
 #include <QHBoxLayout>
+#include <qboxlayout.h>
+#include <qlabel.h>
+#include <qnamespace.h>
+#include <qrangemodeladapter.h>
+
+void clearLayout(QLayout *);
+
+// initial values for static variables must be done in separate cpp file
+bool BreakControl::hideSkipButton = false;
+bool BreakControl::hideLockButton = false;
+bool BreakControl::hidePostponeButton = false;
 
 BreakControl::BreakControl(QWidget *parent, Qt::WindowType type)
     : QWidget(parent, type)
 {
+    // BreakControl is rebuild every time the config is updated
     m_vbox = new QVBoxLayout;
     m_textLabel = new QLabel(this);
     m_textLabel->setAlignment(Qt::AlignHCenter);
@@ -39,6 +51,13 @@ BreakControl::BreakControl(QWidget *parent, Qt::WindowType type)
     m_skipButton->setFixedHeight(sizeSkip.height());
     connect(m_skipButton, &QPushButton::clicked, this, &BreakControl::skip);
 
+    m_lockButton = new QPushButton(i18n("Lock Screen"), hbox);
+    hboxHBoxLayout->addWidget(m_lockButton);
+    QSize sizeLock(m_lockButton->size());
+    m_lockButton->setFixedHeight(sizeLock.height());
+    m_lockButton->setIcon(QIcon::fromTheme("system-lock-screen"));
+    connect(m_lockButton, &QPushButton::clicked, this, &BreakControl::slotLock);
+
     m_postponeButton = new QPushButton(i18n("Postpone Break"), hbox);
     hboxHBoxLayout->addWidget(m_postponeButton);
     QSize sizePostpone(m_postponeButton->size());
@@ -46,29 +65,50 @@ BreakControl::BreakControl(QWidget *parent, Qt::WindowType type)
     m_postponeButton->setFixedHeight(sizePostpone.height());
     connect(m_postponeButton, &QPushButton::clicked, this, &BreakControl::postpone);
 
-    m_lockButton = new QPushButton(i18n("Lock Screen"), hbox);
-    hboxHBoxLayout->addWidget(m_lockButton);
-    QSize sizeLock(m_skipButton->size());
-    m_lockButton->setFixedHeight(sizeLock.height());
-    m_lockButton->setIcon(QIcon::fromTheme("system-lock-screen"));
-    connect(m_lockButton, &QPushButton::clicked, this, &BreakControl::slotLock);
+    if (BreakControl::hideSkipButton) {
+        m_skipButton->hide();
+    } else {
+        m_skipButton->show();
+    }
+
+    if (BreakControl::hideLockButton) {
+        m_lockButton->hide();
+    } else {
+        m_lockButton->show();
+    }
+
+    if (BreakControl::hidePostponeButton) {
+        m_postponeButton->hide();
+    } else {
+        m_postponeButton->show();
+    }
 
     m_vbox->addWidget(m_textLabel);
     m_vbox->addWidget(hbox);
 
     setLayout(m_vbox);
 
+    // these two are for screen resizing
     connect(qApp, &QGuiApplication::screenAdded, this, &BreakControl::slotCenterIt);
     connect(qApp, &QGuiApplication::screenRemoved, this, &BreakControl::slotCenterIt);
 
     slotCenterIt();
 }
 
+void BreakControl::updateButtonState(bool skip, bool lock, bool postpone)
+{
+    BreakControl::hideSkipButton = skip;
+    BreakControl::hideLockButton = lock;
+    BreakControl::hidePostponeButton = postpone;
+}
+
 void BreakControl::slotCenterIt()
 {
     const QRect r(QGuiApplication::primaryScreen()->geometry());
 
-    const QPoint center(r.width() / 2 - sizeHint().width() / 2, r.y());
+    const QPoint center(r.width() / 2 - sizeHint().width() / 2, r.height() / 2 - sizeHint().height() / 2);
+    resize(minimumSize());
+    m_textLabel->setAlignment(Qt::AlignCenter);
     move(center);
 }
 
@@ -100,6 +140,8 @@ void BreakControl::showPostpone(bool show)
 void BreakControl::paintEvent(QPaintEvent *event)
 {
     if (event->type() == QEvent::Paint) {
+        // this all draws the blue border around the remaining break time widget
+
         int margin = 3;
         QPainterPath box;
         box.moveTo(rect().topLeft());

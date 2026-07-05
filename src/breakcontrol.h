@@ -20,6 +20,7 @@ class BreakControl : public QWidget
 
 public:
     BreakControl(QWidget *, Qt::WindowType);
+    static void updateButtonState(bool, bool, bool);
     void setText(const QString &);
     void showMinimize(bool show);
     void showLock(bool show);
@@ -43,6 +44,9 @@ private:
     QPushButton *m_lockButton;
     QVBoxLayout *m_vbox;
     QPushButton *m_postponeButton;
+    static bool hideSkipButton;
+    static bool hideLockButton;
+    static bool hidePostponeButton;
 };
 
 #endif // BREAKCONTROL_H

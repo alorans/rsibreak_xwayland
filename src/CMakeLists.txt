@@ -46,7 +46,6 @@ ecm_add_wayland_client_protocol(rsibreak_lib
     PROTOCOL "${WAYLAND_PROTOCOLS_DIR}/staging/ext-idle-notify/ext-idle-notify-v1.xml"
     BASENAME ext-idle-notify-v1
 )
-target_include_directories(rsibreak_lib PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 # linking
 target_link_libraries(rsibreak_lib

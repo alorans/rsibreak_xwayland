@@ -1,9 +1,13 @@
 Fork of [KDE/rsibreak](https://github.com/KDE/rsibreak) with some changes so it works better for me.
 
-Currently:
+Working:
 - Big breaks are optional.
 - Idle detection is working on Wayland.
-- (TODO) Countdown is displayed in the center of the screen and without blue border.
+- Break countdown is displayed in center of screen and with better formatting.
+
+Bugs:
+- Keypresses are not blocked during a break on Wayland.
+- Configuration > During Breaks > Popup section becomes irreversably blocked out (you must get it back by editing the config file).
 
 This only works on KDE Plasma using Wayland.
 You must set the environment variable `QT_QPA_PLATFORM=xcb` prior to running.

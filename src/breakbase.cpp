@@ -17,6 +17,8 @@
 #include <QObject>
 #include <QPainter>
 #include <QScreen>
+#include <kformat.h>
+#include <qpoint.h>
 
 BreakBase::BreakBase(QObject *parent)
     : QObject(parent)
@@ -31,6 +33,7 @@ BreakBase::BreakBase(QObject *parent)
     connect(m_breakControl, &BreakControl::skip, this, &BreakBase::skip);
     connect(m_breakControl, &BreakControl::lock, this, &BreakBase::lock);
     connect(m_breakControl, &BreakControl::postpone, this, &BreakBase::postpone);
+    deactivate();
 }
 
 BreakBase::~BreakBase()
