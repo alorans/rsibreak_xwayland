@@ -24,8 +24,8 @@
 
         buildInputs = with pkgs; [
           wayland
-          qtbase
         ] ++ (with pkgs.kdePackages; [
+          qtbase
           kcoreaddons
           kconfig
           kcrash
