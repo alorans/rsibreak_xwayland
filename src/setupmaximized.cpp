@@ -52,7 +52,7 @@ public:
     KPluralHandlingSpinBox *popupDuration;
     QLabel *popupDurationLabel;
     QGroupBox *popupBox;
-    QCheckBox *usePopup;
+    // QCheckBox *usePopup;
     QCheckBox *useFlash;
     QLabel *useFlashLabel;
     QCheckBox *readOnlyPlasma;
@@ -203,14 +203,11 @@ SetupMaximized::SetupMaximized(QWidget *parent)
 
     d->popupBox = new QGroupBox(this);
     d->popupBox->setTitle(i18n("Popup"));
+    d->popupBox->setCheckable(true);
+    d->popupBox->setWhatsThis(i18n("Shows a countdown popup when it is time to break. The countdown resets on activity."));
 
     QLabel *label = new QLabel(i18n("RSIBreak can show a popup before replacing your whole screen with the effect chosen above."), this);
     label->setWordWrap(true);
-
-    d->usePopup = new QCheckBox(i18n("&Use the popup"), this);
-    connect(d->usePopup, &QCheckBox::toggled, this, &SetupMaximized::slotHideFlash);
-    d->usePopup->setWhatsThis(i18n("Shows a countdown popup when it is time to break. The countdown resets on activity."));
-    label->setBuddy(d->usePopup);
 
     QWidget *m6 = new QWidget(this);
     QHBoxLayout *m6HBoxLayout = new QHBoxLayout(m6);
@@ -238,7 +235,6 @@ SetupMaximized::SetupMaximized(QWidget *parent)
 
     QVBoxLayout *vbox3 = new QVBoxLayout(d->popupBox);
     vbox3->addWidget(label);
-    vbox3->addWidget(d->usePopup);
     vbox3->addWidget(m6);
     vbox3->addWidget(d->useFlashLabel);
     vbox3->addWidget(d->useFlash);
@@ -254,7 +250,6 @@ SetupMaximized::SetupMaximized(QWidget *parent)
     l->addStretch(1);
     setLayout(l);
     readSettings();
-    slotHideFlash();
 }
 
 SetupMaximized::~SetupMaximized()
@@ -314,16 +309,6 @@ void SetupMaximized::slotFolderEdited(const QString &newPath)
     }
 }
 
-void SetupMaximized::slotHideFlash()
-{
-    d->effectLabel->setText(d->usePopup->isChecked() ? i18n("Choose the effect you want after patience runs out")
-                                                     : i18n("Choose the effect you want during breaks"));
-    d->useFlash->setEnabled(d->usePopup->isChecked());
-    d->useFlashLabel->setEnabled(d->usePopup->isChecked());
-    d->popupDuration->setEnabled(d->usePopup->isChecked());
-    d->popupDurationLabel->setEnabled(d->usePopup->isChecked());
-}
-
 void SetupMaximized::applySettings()
 {
     KConfigGroup config = KSharedConfig::openConfig()->group("General Settings");
@@ -345,7 +330,7 @@ void SetupMaximized::applySettings()
     config.writeEntry("UsePlasmaReadOnly", d->readOnlyPlasma->isChecked());
     config.writeEntry("Graylevel", d->graySlider->value());
     config = KSharedConfig::openConfig()->group("Popup Settings");
-    config.writeEntry("UsePopup", d->usePopup->isChecked());
+    config.writeEntry("UsePopup", d->popupBox->isChecked());
     config.writeEntry("UseFlash", d->useFlash->isChecked());
 
     config.sync();
@@ -376,6 +361,6 @@ void SetupMaximized::readSettings()
     d->readOnlyPlasma->setChecked(config.readEntry("UsePlasmaReadOnly", true));
     d->graySlider->setValue(config.readEntry("Graylevel", 80));
     config = KSharedConfig::openConfig()->group("Popup Settings");
-    d->usePopup->setChecked(config.readEntry("UsePopup", true));
+    d->popupBox->setChecked(config.readEntry("UsePopup", true));
     d->useFlash->setChecked(config.readEntry("UseFlash", true));
 }

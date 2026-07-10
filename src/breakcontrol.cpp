@@ -20,6 +20,7 @@
 #include <KLocalizedString>
 #include <QHBoxLayout>
 #include <qboxlayout.h>
+#include <qdebug.h>
 #include <qlabel.h>
 #include <qnamespace.h>
 #include <qrangemodeladapter.h>
@@ -34,7 +35,7 @@ bool BreakControl::hidePostponeButton = false;
 BreakControl::BreakControl(QWidget *parent, Qt::WindowType type)
     : QWidget(parent, type)
 {
-    // BreakControl is rebuild every time the config is updated
+    // BreakControl is rebuilt every time the config is updated
     m_vbox = new QVBoxLayout;
     m_textLabel = new QLabel(this);
     m_textLabel->setAlignment(Qt::AlignHCenter);
@@ -95,21 +96,21 @@ BreakControl::BreakControl(QWidget *parent, Qt::WindowType type)
     slotCenterIt();
 }
 
-void BreakControl::updateButtonState(bool skip, bool lock, bool postpone)
+void BreakControl::updateButtonState(bool hide_skip, bool hide_lock, bool hide_postpone)
 {
-    BreakControl::hideSkipButton = skip;
-    BreakControl::hideLockButton = lock;
-    BreakControl::hidePostponeButton = postpone;
+    BreakControl::hideSkipButton = hide_skip;
+    BreakControl::hideLockButton = hide_lock;
+    BreakControl::hidePostponeButton = hide_postpone;
 }
 
 void BreakControl::slotCenterIt()
 {
     const QRect r(QGuiApplication::primaryScreen()->geometry());
-
-    const QPoint center(r.width() / 2 - sizeHint().width() / 2, r.height() / 2 - sizeHint().height() / 2);
+    // top center is better for slideshow mode and such
+    const QPoint top_center(r.width() / 2 - sizeHint().width() / 2, r.top());
     resize(minimumSize());
     m_textLabel->setAlignment(Qt::AlignCenter);
-    move(center);
+    move(top_center);
 }
 
 void BreakControl::slotLock()
@@ -120,21 +121,6 @@ void BreakControl::slotLock()
 void BreakControl::setText(const QString &text)
 {
     m_textLabel->setText(text);
-}
-
-void BreakControl::showMinimize(bool show)
-{
-    m_skipButton->setVisible(show);
-}
-
-void BreakControl::showLock(bool show)
-{
-    m_lockButton->setVisible(show);
-}
-
-void BreakControl::showPostpone(bool show)
-{
-    m_postponeButton->setVisible(show);
 }
 
 void BreakControl::paintEvent(QPaintEvent *event)

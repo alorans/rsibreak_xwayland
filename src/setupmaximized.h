@@ -48,7 +48,6 @@ private slots:
     void slotEffectChanged(int current);
     void slotFolderPicker();
     void slotFolderEdited(const QString &newPath);
-    void slotHideFlash();
 
 private:
     void hideSkipButtonChanged(bool);

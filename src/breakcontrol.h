@@ -20,11 +20,8 @@ class BreakControl : public QWidget
 
 public:
     BreakControl(QWidget *, Qt::WindowType);
-    static void updateButtonState(bool, bool, bool);
+    static void updateButtonState(bool hide_skip, bool hide_lock, bool hide_postpone);
     void setText(const QString &);
-    void showMinimize(bool show);
-    void showLock(bool show);
-    void showPostpone(bool arg1);
 
 protected:
     void paintEvent(QPaintEvent *event) override;

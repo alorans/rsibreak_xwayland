@@ -7,6 +7,7 @@
 */
 
 #include "rsiwidget.h"
+#include "breakcontrol.h"
 #include "grayeffect.h"
 #include "plasmaeffect.h"
 #include "popupeffect.h"
@@ -208,6 +209,11 @@ void RSIObject::readConfig()
     int effect = config.readEntry("Effect", 0);
 
     delete m_effect;
+    const bool hideMin = config.readEntry("HideMinimizeButton", false);
+    const bool hideLock = config.readEntry("HideLockButton", false);
+    const bool hidePostpone = config.readEntry("HidePostponeButton", false);
+    BreakControl::updateButtonState(hideMin, hideLock, hidePostpone);
+
     switch (effect) {
     case Plasma: {
         m_effect = new PlasmaEffect(nullptr);
@@ -242,9 +248,6 @@ void RSIObject::readConfig()
     connect(m_effect, &BreakBase::lock, this, &RSIObject::slotLock);
     connect(m_effect, &BreakBase::postpone, m_timer, &RSITimer::postponeBreak);
 
-    m_effect->showMinimize(!config.readEntry("HideMinimizeButton", false));
-    m_effect->showLock(!config.readEntry("HideLockButton", false));
-    m_effect->showPostpone(!config.readEntry("HidePostponeButton", false));
     m_effect->disableShortcut(config.readEntry("DisableAccel", false));
 }
 

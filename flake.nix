@@ -20,6 +20,9 @@
           kdePackages.extra-cmake-modules
           wayland-protocols
           wayland
+          # this lets us run "codium ." from inside a direnv without getting errors when starting the terminal
+          # https://discourse.nixos.org/t/non-interactive-bash-errors-from-flake-nix-mkshell/33310
+          bashInteractive
         ];
 
         buildInputs = with pkgs; [

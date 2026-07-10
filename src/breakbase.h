@@ -28,9 +28,6 @@ public:
     virtual void setLabel(const QString &);
     void setReadOnly(bool);
     bool readOnly() const;
-    void showMinimize(bool);
-    void showLock(bool);
-    void showPostpone(bool);
     void disableShortcut(bool disable);
     void setGrayEffectOnAllScreens(bool on);
     void setGrayEffectLevel(int level);

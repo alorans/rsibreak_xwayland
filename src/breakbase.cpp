@@ -102,21 +102,6 @@ void BreakBase::setLabel(const QString &text)
     m_breakControl->setText(text);
 }
 
-void BreakBase::showMinimize(bool show)
-{
-    m_breakControl->showMinimize(show);
-}
-
-void BreakBase::showLock(bool show)
-{
-    m_breakControl->showLock(show);
-}
-
-void BreakBase::showPostpone(bool show)
-{
-    m_breakControl->showPostpone(show);
-}
-
 void BreakBase::disableShortcut(bool disable)
 {
     m_disableShortcut = disable;
